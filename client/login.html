@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Habit Tracker AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 ghibli-gradient-bg">
+    <div class="ghibli-card rounded-xl shadow-2xl p-8 md:p-12 max-w-md w-full text-center transform hover:scale-105 transition-transform duration-300 ease-in-out">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6 tracking-tight">
+            Welcome Back!
+        </h1>
+        <p class="text-md md:text-lg text-gray-600 mb-8 leading-relaxed">
+            Log in to continue building amazing habits.
+        </p>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="usernameOrEmail" class="sr-only">Username or Email</label>
+                <input type="text" id="usernameOrEmail" name="usernameOrEmail" placeholder="Username or Email" required
+                       class="w-full px-4 py-3 rounded-lg ghibli-input text-gray-800 placeholder-gray-500">
+            </div>
+            <div>
+                <label for="password" class="sr-only">Password</label>
+                <input type="password" id="password" name="password" placeholder="Password" required
+                       class="w-full px-4 py-3 rounded-lg ghibli-input text-gray-800 placeholder-gray-500">
+            </div>
+            <button type="submit"
+                    class="w-full ghibli-btn-primary py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75">
+                Login
+            </button>
+        </form>
+
+        <p class="mt-8 text-gray-600">
+            Don't have an account?
+            <a href="register.html" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200 ease-in-out">
+                Register here
+            </a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const usernameOrEmail = document.getElementById('usernameOrEmail').value;
+            const password = document.getElementById('password').value;
+
+            // Ensure these logs appear in your BROWSER'S developer console
+            console.log('Client-side: Logging in with:', { usernameOrEmail, password });
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ usernameOrEmail, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Client-side: Login successful response:', data);
+                    localStorage.setItem('userId', data.userId); // Store the actual user ID from the backend
+                    alert('Login successful! Redirecting to dashboard.');
+                    window.location.href = 'dashboard.html'; // Redirect to dashboard page
+                } else {
+                    console.error('Client-side: Login failed response:', data.message);
+                    alert('Login failed: ' + (data.message || 'Invalid credentials.'));
+                }
+            } catch (error) {
+                console.error('Client-side: Error during login fetch:', error);
+                alert('An error occurred during login. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

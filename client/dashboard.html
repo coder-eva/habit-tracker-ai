@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Habit Tracker AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col"> 
+    <header class="py-4 px-6 flex justify-between items-center"> 
+        <h1 class="text-2xl font-bold">Habit Tracker AI</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="dashboard.html" class="font-semibold">Dashboard</a></li>
+                <li><a href="profile.html" class="font-semibold">Profile</a></li>
+                <li><a href="insights.html" class="font-semibold">Insights</a></li> <li><a href="suggestions.html" class="font-semibold">AI Suggestions</a></li>
+                <li><a href="login.html" id="logoutButton" class="font-semibold">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mx-auto p-6">
+        <div class="ghibli-card rounded-xl shadow-lg p-8 mb-8"> <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Your Habits</h2>
+            <p class="text-gray-600 mb-6">Start building positive routines with the help of AI.</p>
+
+            <form id="addHabitForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end">
+                <div class="md:col-span-2">
+                    <label for="habitName" class="block text-gray-700 text-sm font-bold mb-2">New Habit Name</label>
+                    <input type="text" id="habitName" name="habitName" placeholder="e.g., Drink 8 glasses of water" required
+                           class="w-full px-4 py-3 rounded-lg ghibli-input text-gray-800 placeholder-gray-500">
+                </div>
+                <div>
+                    <button type="submit"
+                            class="w-full ghibli-btn-primary py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75">
+                        Add Habit
+                    </button>
+                </div>
+            </form>
+
+            <div id="habitsList" class="space-y-4">
+                <p class="text-gray-500 text-center">Loading habits...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-8">
+        <p>&copy; 2025 Habit Tracker AI. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let currentUserId = localStorage.getItem('userId') || 'placeholder_user_id';
+
+        function calculateBasicStreak(completionDates) {
+            if (!completionDates || completionDates.length === 0) return '0 days';
+
+            const sortedDates = completionDates.map(date => new Date(date)).sort((a, b) => a.getTime() - b.getTime());
+
+            let streak = 0;
+            let lastDate = null;
+
+            for (let i = sortedDates.length - 1; i >= 0; i--) {
+                const currentDate = sortedDates[i];
+                currentDate.setHours(0, 0, 0, 0);
+
+                if (!lastDate) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+
+                    if (currentDate.getTime() === today.getTime() || currentDate.getTime() === yesterday.getTime()) {
+                        streak = 1;
+                        lastDate = currentDate;
+                    } else {
+                        break;
+                    }
+                } else {
+                    const expectedPrevDay = new Date(lastDate);
+                    expectedPrevDay.setDate(lastDate.getDate() - 1);
+                    expectedPrevDay.setHours(0, 0, 0, 0);
+
+                    if (currentDate.getTime() === expectedPrevDay.getTime()) {
+                        streak++;
+                        lastDate = currentDate;
+                    } else if (currentDate.getTime() < expectedPrevDay.getTime()) {
+                        break;
+                    }
+                }
+            }
+            return `${streak} day${streak === 1 ? '' : 's'}`;
+        }
+
+        function generateDailyProgressVisual(completionDates, numDays = 7) {
+            const visualContainer = document.createElement('div');
+            visualContainer.className = 'flex space-x-1 mt-2';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const completedDatesNormalized = completionDates.map(date => {
+                const d = new Date(date);
+                d.setHours(0, 0, 0, 0);
+                return d.getTime();
+            });
+
+            for (let i = 0; i < numDays; i++) { 
+                const day = new Date(today);
+                day.setDate(today.getDate() - i);
+                day.setHours(0, 0, 0, 0);
+
+                const daySquare = document.createElement('div');
+                daySquare.className = 'w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs text-white';
+                daySquare.title = day.toLocaleDateString();
+
+                if (completedDatesNormalized.includes(day.getTime())) {
+                    daySquare.classList.add('bg-green-500', 'completed-day');
+                } else {
+                    daySquare.classList.add('bg-red-300', 'missed-day');
+                }
+                visualContainer.appendChild(daySquare);
+            }
+            return visualContainer;
+        }
+
+        async function fetchHabits() {
+            if (currentUserId === 'placeholder_user_id') {
+                const habitsList = document.getElementById('habitsList');
+                habitsList.innerHTML = '<p class="text-red-500 text-center">Please log in to view your habits.</p>';
+                return;
+            }
+
+            console.log(`Fetching habits for user: ${currentUserId}`);
+            const habitsList = document.getElementById('habitsList');
+            habitsList.innerHTML = '<p class="text-gray-500 text-center">Loading habits...</p>';
+
+            try {
+                const response = await fetch(`/api/habits?userId=${currentUserId}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch habits');
+                }
+
+                const habits = await response.json();
+                renderHabits(habits);
+
+            } catch (error) {
+                console.error('Error in fetchHabits:', error);
+                if (error instanceof TypeError) {
+                    habitsList.innerHTML = `<p class="text-red-500 text-center">Error rendering habits: ${error.message}</p>`;
+                } else {
+                    habitsList.innerHTML = `<p class="text-red-500 text-center">Failed to load habits: ${error.message}</p>`;
+                }
+            }
+        }
+
+        function renderHabits(habits) {
+            const habitsList = document.getElementById('habitsList');
+            habitsList.innerHTML = '';
+
+            if (habits.length === 0) {
+                habitsList.innerHTML = '<p class="text-gray-500 text-center">No habits added yet. Add your first habit above!</p>';
+                return;
+            }
+
+            habits.forEach(habit => {
+                const streak = calculateBasicStreak(habit.completionDates);
+                const habitCard = document.createElement('div');
+                habitCard.className = 'ghibli-card border border-gray-200 rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between shadow-sm';
+
+                habitCard.innerHTML = `
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-semibold text-gray-800">${habit.name}</h3>
+                        <p class="text-sm text-gray-600">Frequency: ${habit.frequency}</p>
+                        <p class="text-sm text-gray-600">Last Done: ${habit.completionDates && habit.completionDates.length > 0 ? new Date(habit.completionDates[habit.completionDates.length - 1]).toLocaleDateString() : 'Never'}</p>
+                        <p class="text-sm text-gray-600">Current Streak: ${streak}</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 md:ml-4 flex-shrink-0 daily-progress-container">
+                    </div>
+                    <div class="mt-4 md:mt-0 md:ml-4 flex-shrink-0 flex space-x-2">
+                        <button data-id="${habit._id}" class="mark-done-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Mark Done</button>
+                        <button data-id="${habit._id}" class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Edit</button>
+                        <button data-id="${habit._id}" class="delete-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Delete</button>
+                    </div>
+                `;
+                habitsList.appendChild(habitCard);
+
+                const visualContainer = habitCard.querySelector('.daily-progress-container');
+                if (visualContainer) {
+                    visualContainer.appendChild(generateDailyProgressVisual(habit.completionDates));
+                } else {
+                    console.error("Visual container not found for habit:", habit.name);
+                }
+
+                habitsList.querySelectorAll('.mark-done-btn').forEach(button => {
+                    button.addEventListener('click', (e) => handleMarkDone(e.target.dataset.id));
+                });
+                habitsList.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (e) => handleEditHabit(e.target.dataset.id));
+                });
+                habitsList.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => handleDeleteHabit(e.target.dataset.id));
+                });
+            });
+        }
+
+        async function handleAddHabit(event) {
+            event.preventDefault();
+            const habitNameInput = document.getElementById('habitName');
+            const newHabitName = habitNameInput.value.trim();
+
+            const userId = localStorage.getItem('userId');
+
+            if (!newHabitName) {
+                alert('Habit name cannot be empty.');
+                return;
+            }
+            if (!userId || userId === 'placeholder_user_id') {
+                alert('User not logged in. Please log in again.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            console.log('Client-side: Creating habit for userId:', userId, 'Habit Name:', newHabitName);
+
+            try {
+                const response = await fetch('/api/habits', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: newHabitName, userId: userId }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Client-side: Habit created successfully:', data);
+                    habitNameInput.value = '';
+                    fetchHabits();
+                } else {
+                    const errorData = await response.json();
+                    console.error('Client-side: Error creating habit:', errorData.message);
+                    alert('Error creating habit: ' + (errorData.message || 'Please try again.'));
+                }
+            } catch (error) {
+                console.error('Client-side: Network error creating habit:', error);
+                alert('Network error. Could not create habit.');
+            }
+        }
+
+        async function handleMarkDone(habitId) {
+            if (currentUserId === 'placeholder_user_id') {
+                alert('Please log in to track habits.');
+                return;
+            }
+            console.log(`Marking habit ${habitId} as done for user ${currentUserId}.`);
+
+            try {
+                const response = await fetch(`/api/habits/${habitId}/track`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Habit "${data.habit.name}" marked as done!`);
+                    fetchHabits();
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to mark habit as done: ' + (errorData.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error marking habit as done:', error);
+                alert('An error occurred while tracking the habit.');
+            }
+        }
+
+        async function handleEditHabit(habitId) {
+            if (currentUserId === 'placeholder_user_id') {
+                alert('Please log in to edit habits.');
+                return;
+            }
+            const newName = prompt('Enter new name for habit:');
+            if (newName === null || newName.trim() === '') {
+                alert('Habit name cannot be empty or cancelled.');
+                return;
+            }
+
+            console.log(`Editing habit ${habitId} to new name: ${newName} for user ${currentUserId}.`);
+
+            try {
+                const response = await fetch(`/api/habits/${habitId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName.trim(), userId: currentUserId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Habit "${data.habit.name}" updated successfully!`);
+                    fetchHabits();
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to update habit: ' + (errorData.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error editing habit:', error);
+                alert('An error occurred while editing the habit.');
+            }
+        }
+
+        async function handleDeleteHabit(habitId) {
+            if (currentUserId === 'placeholder_user_id') {
+                alert('Please log in to delete habits.');
+                return;
+            }
+            if (confirm('Are you sure you want to delete this habit?')) {
+                console.log(`Deleting habit ${habitId} for user ${currentUserId}.`);
+
+                try {
+                    const response = await fetch(`/api/habits/${habitId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUserId })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        alert(`Habit deleted successfully!`);
+                        fetchHabits();
+                    } else {
+                        const errorData = await response.json();
+                        alert('Failed to delete habit: ' + (errorData.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error deleting habit:', error);
+                    alert('An error occurred while deleting the habit.');
+                }
+            }
+        }
+
+        function handleLogout(event) {
+            event.preventDefault();
+            console.log('User logging out...');
+            localStorage.removeItem('userId');
+            alert('You have been logged out.');
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchHabits();
+
+            const addHabitForm = document.getElementById('addHabitForm');
+            if (addHabitForm) {
+                addHabitForm.addEventListener('submit', handleAddHabit);
+            } else {
+                console.error("Element with ID 'addHabitForm' not found.");
+            }
+
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', handleLogout);
+            } else {
+                console.error("Element with ID 'logoutButton' not found.");
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const loggedInUserId = urlParams.get('userId');
+            if (loggedInUserId) {
+                currentUserId = loggedInUserId;
+                localStorage.setItem('userId', loggedInUserId);
+                console.log('Dashboard loaded for user:', currentUserId);
+            } else if (localStorage.getItem('userId')) {
+                currentUserId = localStorage.getItem('userId');
+                console.log('Dashboard loaded with stored user ID:', currentUserId);
+            } else {
+                console.log('No user ID found. Please log in.');
+            }
+        });
+    </script>
+</body>
+</html>

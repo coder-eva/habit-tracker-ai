@@ -1,0 +1,153 @@
+/* Custom CSS for Studio Ghibli-inspired theme */
+
+/* Define Ghibli-esque color palette using CSS variables (Autumnal Browns & Greens) */
+:root {
+    --ghibli-bg-light: #F8F5EE; /* A soft, warm off-white/cream */
+    --ghibli-primary: #3B5323; /* Deep forest green */
+    --ghibli-secondary: #8B4513; /* Saddle brown (earthy) */
+    --ghibli-accent-warm: #CD5C5C; /* Indian red (muted autumn leaf) */
+    --ghibli-accent-soft: #D2B48C; /* Tan (soft, earthy) */
+    --ghibli-text-dark: #4A3C32; /* Dark coffee brown for readability */
+    --ghibli-text-medium: #706256; /* Muted brown-grey for secondary text */
+    --ghibli-card-bg: #FFFFFF; /* White for cards, can be slightly off-white */
+    --ghibli-border: #A0A0A0; /* Soft grey-brown border color */
+    --ghibli-shadow: rgba(0, 0, 0, 0.08); /* Softer shadow for cards */
+    --ghibli-shadow-stronger: rgba(0, 0, 0, 0.15); /* Slightly stronger shadow for header */
+}
+
+/* Import Google Fonts - Choose fonts that evoke a whimsical/gentle feel */
+/* 'Nunito' for general legibility, 'Playfair Display' for elegant headings */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+/* Apply global font styles and background */
+body {
+    font-family: 'Nunito', sans-serif; /* More legible default font */
+    color: var(--ghibli-text-dark);
+    background-color: var(--ghibli-bg-light); /* Light base background */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif; /* Elegant serif for headings */
+    color: var(--ghibli-text-dark);
+}
+
+/* Custom styles for specific elements to override or enhance Tailwind */
+
+/* Softer gradients for login/register pages */
+.ghibli-gradient-bg {
+    background: linear-gradient(to bottom right, var(--ghibli-accent-soft), var(--ghibli-secondary)); /* Tan to Saddle brown gradient */
+}
+
+/* General button styling */
+.ghibli-btn-primary {
+    background-color: var(--ghibli-primary); /* Deep forest green */
+    color: white;
+    font-weight: 700; /* Bold for Nunito */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.ghibli-btn-primary:hover {
+    background-color: var(--ghibli-secondary); /* Saddle brown on hover */
+    transform: translateY(-2px);
+}
+
+/* Card/Panel styling */
+.ghibli-card {
+    background-color: var(--ghibli-card-bg);
+    border-radius: 12px; /* Slightly more rounded corners */
+    box-shadow: 0 10px 15px -3px var(--ghibli-shadow), 0 4px 6px -2px var(--ghibli-shadow); /* Softer shadow */
+}
+
+/* Input field styling */
+.ghibli-input {
+    border-color: var(--ghibli-border);
+    border-width: 2px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ghibli-input:focus {
+    border-color: var(--ghibli-accent-warm); /* Indian red on focus */
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 92, 92, 0.4); /* Light focus ring with accent warm */
+}
+
+/* Specific button colors for dashboard (Autumnal adjustments) */
+.mark-done-btn {
+    background-color: var(--ghibli-primary); /* Deep forest green */
+}
+.mark-done-btn:hover {
+    background-color: #2F401A; /* Darker green */
+}
+
+.edit-btn {
+    background-color: var(--ghibli-accent-soft); /* Tan */
+}
+.edit-btn:hover {
+    background-color: #C0A07C; /* Darker tan */
+}
+
+.delete-btn {
+    background-color: var(--ghibli-accent-warm); /* Indian red */
+}
+.delete-btn:hover {
+    background-color: #B24C4C; /* Darker Indian red */
+}
+
+#logoutButton {
+    color: var(--ghibli-accent-warm); /* Use accent warm for logout */
+}
+#logoutButton:hover {
+    color: var(--ghibli-primary);
+}
+
+
+/* Adjustments for header/footer */
+header {
+    background-color: var(--ghibli-card-bg); /* White header background */
+    /* REMOVED: box-shadow: 0 4px 12px 2px var(--ghibli-shadow-stronger); */ 
+}
+
+header h1 { /* Adjust header title color for contrast */
+    color: var(--ghibli-text-dark); /* Dark text on light header */
+}
+
+footer {
+    background-color: var(--ghibli-text-dark); /* Dark coffee brown footer */
+    color: var(--ghibli-bg-light); /* Light text on dark footer */
+}
+
+/* Navigation links */
+nav a {
+    color: var(--ghibli-text-medium); /* Muted text on light header for nav links */
+}
+nav a:hover {
+    color: var(--ghibli-primary); /* Primary green on hover for nav links */
+}
+
+/* Ensure the main content background fits the new theme */
+main {
+    background-color: var(--ghibli-bg-light);
+}
+
+/* For elements with original Tailwind classes that need adjustment */
+/* These are overrides for existing Tailwind classes that might not have been replaced by custom classes */
+.bg-purple-600 { /* Adjust primary button if not using ghibli-btn-primary */
+    background-color: var(--ghibli-primary);
+}
+.hover\:bg-purple-700:hover {
+    background-color: var(--ghibli-secondary); /* Use secondary color for hover */
+}
+
+.border-purple-500 { /* Adjust input focus border */
+    border-color: var(--ghibli-accent-warm);
+}
+.focus\:ring-purple-200:focus {
+    box-shadow: 0 0 0 3px rgba(205, 92, 92, 0.4); /* Focus ring with accent warm */
+}
+
+/* Styles for Daily Progress Visual */
+.completed-day {
+    background-color: var(--ghibli-primary); /* Deep forest green for completed */
+}
+
+.missed-day {
+    background-color: var(--ghibli-accent-warm); /* Indian red for missed */
+}
