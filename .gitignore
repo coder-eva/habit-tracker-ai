@@ -1,2 +1,17 @@
+# Environment variables
 .env
+
+# Node.js dependencies
 node_modules/
+
+# Logs
+*.log
+
+# macOS specific files
+.DS_Store
+
+# npm debug logs
+npm-debug.log*
+
+# Yarn integrity file
+.yarn-integrity
